@@ -65,12 +65,16 @@ float Ambient[]   = {0.01*80 ,0.01*80 ,0.01*80 ,1.0};
 float Diffuse[]   = {1.0,1.0,1.0,1.0};
 float Specular[]  = {0.01*0,0.01*0,0.01*0,1.0};
 
-float mvCar = 0.0;
+float mvPlayerCar = 0.0;
 float mvRoad = 0.0;
-float leftRight =0.0;
-int refreshMills = 50;
+float leftRightPlayer =0.0;
+float leftRightEnemy =0.0;
+int refreshMills = 150;
+int refreshMillsEnemy = 175;
 bool bulletFired = false;
-GLfloat bulletpos = 0;
+GLfloat playerBulletPos = 0;
+GLfloat enemyBulletPos = 0;
+int counterFire = 0;
 bool enemyDirection = true;
 void Init(){
     textures[TEX_METAL] = LoadTexBMP("textures/basic-metal.bmp");
@@ -103,30 +107,46 @@ void Init(){
     textures[TEX_CHINDERBLOCK] = LoadTexBMP("textures/cinder-block.bmp");
     textures[TEX_DESERT] = LoadTexBMP("textures/sand.bmp");
 }
-void Timer(int val){
+void PlayerTimer(int val){
 	if(bulletFired){
-        if(bulletpos<=30){
-            std::cout<<"pos :"<<bulletpos<<std::endl;
-		bulletpos = bulletpos + 0.5;
+        if(playerBulletPos<=30){
+		playerBulletPos = playerBulletPos + 0.5;
         }else{
             bulletFired = false;
-            bulletpos = 0;
+            playerBulletPos = 0;
         }
 	}
-    // if(leftRight >= 1.5){ //Left
-	// 	enemyDirection = false;
-	// }
-	// if(leftRight <= -2){ //Right
-	// 	enemyDirection = true;
-	// }
-    // if(enemyDirection){
-	// 	leftRight += 0.05;
-	// }else{
-	// 	leftRight -= 0.05;
-	// }
-    // mvCar += 0.05;
 	glutPostRedisplay();
-   glutTimerFunc(refreshMills, Timer, 0);
+   glutTimerFunc(refreshMills, PlayerTimer, 0);
+}
+void EnemyTimer(int val){
+    if(leftRightEnemy >= 1.5){ //Left
+		enemyDirection = false;
+	}
+	if(leftRightEnemy <= -2){ //Right
+		enemyDirection = true;
+	}
+    if(enemyDirection){
+		leftRightEnemy += 0.05;
+	}else{
+		leftRightEnemy -= 0.05;
+	}
+    // if(enemyBulletPos < mvPlayerCar){
+    //     counterFire++;
+    // }
+    
+    // if(enemyBulletPos > -30){
+    //     if(mvPlayerCar>= 5.5){
+    //         counterFire++;
+    //     }
+    //     enemyBulletPos -= 0.5;
+    // }else{
+    //     enemyBulletPos = 0;
+    // }
+    // std::cout<<"counter :"<<counterFire<<std::endl;
+    // mvPlayerCar += 0.05;
+	glutPostRedisplay();
+    glutTimerFunc(refreshMillsEnemy, EnemyTimer, 0);
 }
 
 static void cube(double x,double y,double z,
@@ -251,7 +271,7 @@ void DrawBullet(double x, double y, double z){
 	glPushMatrix();
 	glColor3f(0,0,0);
     ball(x,y,z,0.2);
-    // cube(8-bulletpos,0.2,2.5+leftRight, 0.2,0.2,0.2, 45);
+    // cube(8-playerBulletPos,0.2,2.5+leftRightPlayer, 0.2,0.2,0.2, 45);
 	glPopMatrix();
 }
 /*
@@ -593,6 +613,220 @@ static void bumper(double x,double y,double z,
     //Undo transformations
     glPopMatrix();
 }
+static void car(double x,double y,double z,
+                double dx,double dy,double dz,
+                double th,
+                float cr, float cb, float cg)
+{
+    //  Set specular color to white
+    float white[] = {1,1,1,1};
+    float black[] = {0,0,0,1};
+    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+    //  Save transformation
+    glPushMatrix();
+    //  Offset
+    glTranslated(x,y,z);
+    glRotated(th,0,1,0);
+    glScaled(dx,dy,dz);
+
+    glPolygonOffset(1,1);
+
+    wheel(0.6,0,0.4, 1,1,1, 0, 8, 10);
+    wheel(-0.6,0,-0.4, 1,1,1, 0, 8, 10);
+    wheel(0.6,0,-0.4, 1,1,1, 0, 8, 10);
+    wheel(-0.6,0,0.4, 1,1,1, 0, 8, 10);
+
+    glColor3f(cr, cb, cg);
+
+    //Lower Body
+    body(0,0.1,0, 0.8,0.1,0.4, 0, 0);
+    //Cabin
+    body(-0.1,0.3,0, 0.3,0.1,0.35, 0, 1);
+
+    texScale = 1.0;
+
+    glColor3f(cr, cb, cg);
+
+    //Front Bumper
+    bumper(0.8,0,0, 1,1,1, 0, 1);
+
+    glColor3f(cr, cb, cg);
+
+    //Rear Bumper
+    bumper(-0.8,0,0, 1,1,1, 180, 0);
+
+    //  Set specular color to white
+    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+    glEnable(GL_POLYGON_OFFSET_FILL);
+
+    glColor3f(cr, cb, cg);
+
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_METAL]);
+
+    //Texture repitition values
+    float texRepX = 1.0;
+    float texRepY = 1.0;
+
+    //Hood and upper side pannels
+    texRepX = dx/texScale;
+    texRepY = dz/texScale;
+    glBegin(GL_QUADS);
+    glNormal3f(0, 0.707107, 0.707107);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.8, 0.25, 0.35);
+    glTexCoord2f(texRepX,0.0); glVertex3f(-0.8, 0.2, 0.4);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(0.8, 0.2, 0.4);
+    glTexCoord2f(0.0,texRepY); glVertex3f(0.8, 0.25, 0.35);
+
+    glNormal3f(0, 1, 0);
+    glTexCoord2f(0.0,0.0); glVertex3f(0.4, 0.25, 0.35);
+    glTexCoord2f(texRepX,0.0); glVertex3f(0.8, 0.25, 0.35);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(0.8, 0.25, -0.35);
+    glTexCoord2f(0.0,texRepY); glVertex3f(0.4, 0.25, -0.35);
+
+    glNormal3f(0, 0.707107, -0.707107);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.8, 0.2, -0.4);
+    glTexCoord2f(texRepX,0.0); glVertex3f(-0.8, 0.25, -0.35);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(0.8, 0.25, -0.35);
+    glTexCoord2f(0.0,texRepY); glVertex3f(0.8, 0.2, -0.4);
+    glEnd();
+
+    //Trunk
+    texRepX = dx/texScale;
+    texRepY = dz/texScale;
+    glBegin(GL_QUADS);
+    glNormal3f(0,1,0);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.8, 0.25, -0.35);
+    glTexCoord2f(texRepX,0.0); glVertex3f(-0.8, 0.25, 0.35);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(-0.6, 0.25, 0.35);
+    glTexCoord2f(0.0,texRepY); glVertex3f(-0.6, 0.25, -0.35);
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_GLASS]);
+
+    glColor3f(0.8, 0.8, 1);
+
+    //Windshield
+    texRepX = 1.0;
+    texRepY = 1.0;
+    glBegin(GL_QUADS);
+    glNormal3f(0.6, 0.8, 0);
+    glTexCoord2f(0.0,0.0); glVertex3f(0.4,0.25,0.35);
+    glTexCoord2f(texRepX,0.0); glVertex3f(0.4,0.25,-0.35);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(0.2,0.4,-0.35);
+    glTexCoord2f(0.0,texRepY); glVertex3f(0.2,0.4,0.35);
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0,0,1);
+    glTexCoord2f(0.0,0.0); glVertex3f(0.2,0.4,0.35);
+    glTexCoord2f(texRepX, 0.0); glVertex3f(0.2,0.25,0.35);
+    glTexCoord2f(texRepX, texRepY); glVertex3f(0.4,0.25,0.35);
+
+    glNormal3f(0,0,-1);
+    glTexCoord2f(0.0,0.0); glVertex3f(0.4,0.25,-0.35);
+    glTexCoord2f(texRepX, 0.0); glVertex3f(0.2,0.25,-0.35);
+    glTexCoord2f(texRepX, texRepY); glVertex3f(0.2,0.4,-0.35);
+    glEnd();
+
+    //Rear Window
+    texRepX = 1.0;
+    texRepY = 1.0;
+    glBegin(GL_QUADS);
+    glNormal3f(-0.6, 0.8, 0);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.6,0.25,-0.35);
+    glTexCoord2f(texRepX,0.0); glVertex3f(-0.6,0.25,0.35);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(-0.4,0.4,0.35);
+    glTexCoord2f(0.0,texRepY); glVertex3f(-0.4,0.4,-0.35);
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0,0,1);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.6,0.25,0.35);
+    glTexCoord2f(texRepX, 0.0); glVertex3f(-0.4,0.25,0.35);
+    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.4,0.4,0.35);
+
+    glNormal3f(0,0,-1);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.4,0.4,-0.35);
+    glTexCoord2f(texRepX, 0.0); glVertex3f(-0.4,0.25,-0.35);
+    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.6,0.25,-0.35);
+    glEnd();
+
+    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_CARBONFIBER]);
+
+    //Spoiler
+    glColor3f(0.3,0.3,0.3);
+    cube(-0.75,0.28,0.3, 0.02,0.03,0.02, 0);
+    cube(-0.75,0.28,-0.3, 0.02,0.03,0.02, 0);
+
+    texRepX = 5.0;
+    texRepY = 1.0;
+
+    glBegin(GL_QUADS);
+    glNormal3f(0, -1, 0);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.7,0.31,-0.35);
+    glTexCoord2f(texRepX,0.0); glVertex3f(-0.7,0.31,0.35);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(-0.8,0.31,0.35);
+    glTexCoord2f(0.0,texRepY); glVertex3f(-0.8,0.31,-0.35);
+
+    glNormal3f(0.196116, 0.980581, 0);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.8,0.33,-0.35);
+    glTexCoord2f(texRepX,0.0); glVertex3f(-0.8,0.33,0.35);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(-0.7,0.31,0.35);
+    glTexCoord2f(0.0,texRepY); glVertex3f(-0.7,0.31,-0.35);
+
+    texRepX = 5.0;
+    texRepY = 0.2;
+    glNormal3f(-1, 0, 0);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.8,0.33,0.35);
+    glTexCoord2f(texRepX,0.0); glVertex3f(-0.8,0.33,-0.35);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(-0.8,0.31,-0.35);
+    glTexCoord2f(0.0,texRepY); glVertex3f(-0.8,0.31,0.35);
+
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_METAL]);
+    glColor3f(cr, cb, cg);
+
+    //Spoiler Fins
+    texRepX = dx/texScale;
+    texRepY = dy/texScale;
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0,0,-1);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.68,0.31,-0.35);
+    glTexCoord2f(texRepX, 0.0); glVertex3f(-0.82,0.31,-0.35);
+    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.82,0.35,-0.35);
+
+    glNormal3f(0,0,1);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.82,0.35,0.35);
+    glTexCoord2f(texRepX, 0.0); glVertex3f(-0.82,0.31,0.35);
+    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.68,0.31,0.35);
+
+    //Duplicate to draw both sides (with inverted normals) when face culling is on
+    glNormal3f(0,0,1);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.68,0.31,-0.35);
+    glTexCoord2f(texRepX, 0.0); glVertex3f(-0.82,0.31,-0.35);
+    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.82,0.35,-0.35);
+
+    glNormal3f(0,0,-1);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.82,0.35,0.35);
+    glTexCoord2f(texRepX, 0.0); glVertex3f(-0.82,0.31,0.35);
+    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.68,0.31,0.35);
+
+    glEnd();
+
+    //Undo transformations
+    glPopMatrix();
+}
 static void policeCar(double x,double y,double z,
                       double dx,double dy,double dz,
                       double th)
@@ -854,6 +1088,82 @@ static void workshop(double x, double z, double th)
     glPopMatrix();
 }
 
+static void house(double x, double z, double th) {
+    //  Save transformation
+    glPushMatrix();
+    //  Offset
+    glTranslated(x,0,z);
+    glRotated(th,0,1,0);
+
+    glPolygonOffset(1,1);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+
+    float white[] = {1,1,1,1};
+    float black[] = {0,0,0,1};
+    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
+    //Building - Grey House
+    glColor3f(0.7, 0.7, 0.7);
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_GREYBRICK]);
+    texScale = 0.5;
+    cube(0,0.9,-3, 2,0.8,1, 0);
+
+    //Door Frame
+    glColor3f(0.5, 0.5, 0.5);
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_WOODBEAM]);
+    texScale = 0.5;
+    cube(-0.4,0.65,-1.95, 0.1,0.55,0.05, 0);
+    cube(0.4,0.65,-1.95, 0.1,0.55,0.05, 0);
+    cube(0,1.25,-1.95, 0.5,0.05,0.05, 0);
+
+    //Window Sills
+    cube(-1.3,0.65,-1.95, 0.45,0.05,0.05, 0); //Left
+    cube(1.3,0.65,-1.95, 0.45,0.05,0.05, 0); //Right
+
+    glDisable(GL_POLYGON_OFFSET_FILL);
+
+    //Door
+    glColor3f(0.5, 0.5, 0.5);
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_FRONTDOOR]);
+    glBegin(GL_QUADS);
+    double texRepX = 1.0;
+    double texRepY = 1.0;
+    glNormal3f(0, 0, 1);
+    glTexCoord2f(0.0,0.0); glVertex3f(-0.31, 0.1, -2);
+    glTexCoord2f(texRepX,0.0); glVertex3f(0.31, 0.1, -2);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(0.31, 1.21, -2);
+    glTexCoord2f(0.0,texRepY); glVertex3f(-0.31, 1.21, -2);
+    glEnd();
+
+    //Windows
+    glColor3f(0.7, 0.7, 0.7);
+
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_WINDOW]);
+    glBegin(GL_QUADS);
+    texRepX = 1.0;
+    texRepY = 2.0;
+
+    //Left Window
+    glNormal3f(0, 0, 1);
+    glTexCoord2f(0.0,0.0); glVertex3f(-1.7, 0.7, -2);
+    glTexCoord2f(texRepX,0.0); glVertex3f(-0.9, 0.7, -2);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(-0.9, 1.3, -2);
+    glTexCoord2f(0.0,texRepY); glVertex3f(-1.7, 1.3, -2);
+
+    //Right Window
+    glNormal3f(0, 0, 1);
+    glTexCoord2f(0.0,0.0); glVertex3f(0.9, 0.7, -2);
+    glTexCoord2f(texRepX,0.0); glVertex3f(1.7, 0.7, -2);
+    glTexCoord2f(texRepX,texRepY); glVertex3f(1.7, 1.3, -2);
+    glTexCoord2f(0.0,texRepY); glVertex3f(0.9, 1.3, -2);
+
+    glEnd();
+
+    //Undo transformations
+    glPopMatrix();
+}
 static void greyHouse(double x, double z, double th) {
     //  Save transformation
     glPushMatrix();
@@ -950,7 +1260,6 @@ static void greyHouse(double x, double z, double th) {
     //Undo transformations
     glPopMatrix();
 }
-
 static void skybox(float dim) {
     glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -1248,33 +1557,44 @@ void display()
         glDisable(GL_LIGHT6);
     }
 
-    if(mvCar >= 36) {exit(0);}
+    if(mvPlayerCar >= 36) {exit(0);}
     //Enemy Car
-    policeCar(-8.5+mvCar,0.13,2.5+leftRight, 1,1,1, 0);
-
+    car(-29,0.13,2.5+leftRightEnemy, 1,1,1, 0,0,0.8,0);
+    DrawBullet(-28.5-enemyBulletPos,0.2,2.5+leftRightEnemy);
+    // std::cout<<"en : "<<enemyBulletPos<<std::endl;
     //Police Car
-    policeCar(8.5-mvCar,0.13,2.5+leftRight, 1,1,1, 180);
-    DrawBullet(8-bulletpos-mvCar,0.2,2.5+leftRight);
+    policeCar(8.5-mvPlayerCar,0.13,2.5+leftRightPlayer, 1,1,1, 180);
+    DrawBullet(8-playerBulletPos-mvPlayerCar,0.2,2.5+leftRightPlayer);
+    // cube(7.5-playerBulletPos-mvPlayerCar,0.2,2.5+leftRightPlayer,0.05,0.5,0.4,0);
+    // std::cout<<"pl : "<<mvPlayerCar<<std::endl<<std::endl;
+
+    // Hitbox
+    glColor3f(0.4, 0.4, 0.4);
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_WOODFENCE]);
+    texScale = 0.5;
+    cube(3,0.6,1, 0.4,0.4,0.4, 90); //Right
+    cube(-1,0.6,4, 0.4,0.4,0.4, 90); //Left
+
     //Lamp Posts
     for(int i=0; i< 39; i+=2){
         lampPost(8-i,0.1,-0.1, 1,1,1, 0);
-        lampPost(8-i,0.1,4.6, 1,1,1, 0);
+        lampPost(8-i,0.1,5.1, 1,1,1, 0);
     }
 
 
     //Street surface - Main Street
     glColor3f(0.4, 0.4, 0.4);
     texScale = 0.5;
-    float xPos = -29;
+    float xPos = -30;
     int i;
-    for(i = 0; i < 20; i++){
+    for(i = 0; i < 21; i++){
         if(i%3==0){
             glBindTexture(GL_TEXTURE_2D,textures[TEX_DESERT]);
         }else{
             glBindTexture(GL_TEXTURE_2D,textures[TEX_ASPALTH]);
         }
-        mvRoad >= 5 ? mvRoad = 0 : NULL;
-        cube(xPos+mvRoad,-0.1,2.25, 1,0.1,3, 0);
+        // mvRoad >= 1.5 ? mvRoad = 0 : NULL;
+        cube(xPos,-0.1,2.25, 1,0.1,3, 0);
         xPos += 2;
     }
     //Grass Square Beside Road
@@ -1286,8 +1606,9 @@ void display()
     //Hedge
     glBindTexture(GL_TEXTURE_2D,textures[TEX_HEDGE]);
     texScale = 0.5;
-    cube(-16,0.3,6.25, 14,0.15,0.3, 0); //Left
-    cube(-16,0.3,-1.25, 14,0.15,0.3, 0); //Right
+    cube(-17,0.3,6.25, 15,0.15,0.3, 0); //Left
+    cube(-31.25,0.3,2.85, 3.75,0.15,0.75, 90); //MiddleFar
+    cube(-17,0.3,-1.25, 15,0.15,0.3, 0); //Right
     //Walkway
     glBindTexture(GL_TEXTURE_2D,textures[TEX_WALKWAY]);
     texScale = 0.4;
@@ -1300,7 +1621,7 @@ void display()
     xPos = -50;
     for(int i = 0; i < 20; i++){
         glBindTexture(GL_TEXTURE_2D,textures[TEX_DESERT]);
-        cube(xPos+mvRoad,-1.0,8.25, 10,0.1,50, 0);
+        cube(xPos,-1.0,8.25, 10,0.1,50, 0);
         xPos += 5;
     }
 
@@ -1315,10 +1636,12 @@ void display()
     cube(-10,-0.05,5.5, 20,0.15,0.5, 0);
 
 
-    cube(10.5,-0.05,2.5, 3.5,0.15,0.5, 90); // Middle
+    cube(10.5,-0.05,2.5, 3.5,0.15,0.5, 90); // Middle Player Side
+    cube(-30.5,-0.05,2.5, 3.5,0.15,0.5, 90); // Middle Far Side
 
     //Grey town house - player side
     greyHouse(0,0,0);
+    // house(5,0,0);
 
     //Rumah Belakang Sekarang
     //Grey town house - Far
@@ -1336,8 +1659,12 @@ void display()
     glColor3f(0.4, 0.4, 0.4);
     glBindTexture(GL_TEXTURE_2D,textures[TEX_WOODFENCE]);
     texScale = 0.5;
-    cube(8,0.6,-1.05, -0.05,0.5,3, 90); //Right
-    cube(10.49,0.6,6.05, 0.05,0.5,0.5, 90); //Left
+    cube(-19,0.6,-2.5, -0.05,0.5,13, 90); //Right Far Side
+    cube(-17,0.6,7.525, -0.05,0.5,15, 90); //Left Far Side
+    
+    cube(8,0.6,-1.05, -0.05,0.5,3, 90); //Right Player Side
+    cube(10.49,0.6,6.05, 0.05,0.5,0.5, 90); //Left Player Side
+
 
     //Brown workshop - player side
     glColor3f(0.7, 0.7, 0.7);
@@ -1392,10 +1719,10 @@ void display()
         glBindTexture(GL_TEXTURE_2D,textures[TEX_WAREHOUSEWINDOW]);
         glBegin(GL_QUADS);
         glNormal3f(-1, 0, 0);
-        glTexCoord2f(texRepX,0.0); glVertex3f(xVal-2,2.7,4);
-        glTexCoord2f(0.0,0.0); glVertex3f(xVal-2,2,4);
-        glTexCoord2f(0.0,texRepY); glVertex3f(xVal-2,2,6);
-        glTexCoord2f(texRepX,texRepY); glVertex3f(xVal-2,2.7,6);
+        glTexCoord2f(texRepX,0.0); glVertex3f(xVal-2,2.7,6);
+        glTexCoord2f(0.0,0.0); glVertex3f(xVal-2,2,6);
+        glTexCoord2f(0.0,texRepY); glVertex3f(xVal-2,2,8);
+        glTexCoord2f(texRepX,texRepY); glVertex3f(xVal-2,2.7,8);
         glEnd();
 
         xVal -= 2;
@@ -1419,10 +1746,10 @@ void display()
     cube(5.2,0.6,-1.05, 0.05,0.5,0.7, 90); //Front Right
 
     //Cinder block wall - Far Side
-    glColor3f(0.4, 0.4, 0.4);
-    glBindTexture(GL_TEXTURE_2D,textures[TEX_CHINDERBLOCK]);
-    texScale = 0.5;
-    cube(-4,0.6,4.05, 2,0.5,0.05, 0); //Left
+    // glColor3f(0.4, 0.4, 0.4);
+    // glBindTexture(GL_TEXTURE_2D,textures[TEX_CHINDERBLOCK]);
+    // texScale = 0.5;
+    // cube(-30.05,0.13,3, 6,0.5,0.05, 90); //Left
 
     //  Draw axes - no lighting from here on
     glDisable(GL_LIGHTING);
@@ -1576,33 +1903,33 @@ void key(unsigned char ch,int x,int y)
         // Player shoot with SPACEBAR
         case 32 :
             bulletFired = true;
-            bulletpos = 0;
+            playerBulletPos = 0;
             break;
         //  Player moving forward car
         case 'w' :
         case 'W' :
-            mvCar += 0.05;
+            mvPlayerCar += 0.05;
             mvRoad += 0.05;
             break;
         //  Player moving backward car
         case 's' :
         case 'S' :
-            mvCar -= 0.05;
+            mvPlayerCar -= 0.05;
             mvRoad -= 0.05;
             break;
         //  Player moving left car
         case 'a' :
         case 'A' :
-            (leftRight<1.5) ? leftRight += 0.05 : leftRight += 0 ;
-            std::cout<<"left : "<<leftRight<<std::endl;
+            (leftRightPlayer<1.5) ? leftRightPlayer += 0.05 : leftRightPlayer += 0 ;
+            // std::cout<<"left : "<<leftRightPlayer<<std::endl;
             break;
         //  Player moving right car
         case 'd' :
         case 'D' :
-            (leftRight<-2) ? leftRight -= 0 : leftRight -= 0.05 ;
+            (leftRightPlayer<-2) ? leftRightPlayer -= 0 : leftRightPlayer -= 0.05 ;
             break;
     }
-    // std::cout<<"mvCar : "<<mvCar<<std::endl;
+    // std::cout<<"mvPlayerCar : "<<mvPlayerCar<<std::endl;
     //  Change field of view angle
     if (ch == '-' && ch>1)
         fov--;
@@ -1644,7 +1971,8 @@ int main(int argc,char* argv[])
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutSpecialFunc(special);
-    glutTimerFunc(refreshMills, Timer, 0);
+    glutTimerFunc(refreshMillsEnemy, EnemyTimer, 0);
+    glutTimerFunc(refreshMills, PlayerTimer, 0);
     glutKeyboardFunc(key);
     Init();
     glutIdleFunc(idle);
