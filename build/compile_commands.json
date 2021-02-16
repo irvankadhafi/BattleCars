@@ -1,0 +1,37 @@
+[
+{
+  "directory": "/home/irvan/Desktop/UAS/BattleCars/build",
+  "command": "/bin/clang++-10 -g -Wno-everything -std=gnu++14 -o CMakeFiles/BattleCars.dir/main.cpp.o -c /home/irvan/Desktop/UAS/BattleCars/main.cpp",
+  "file": "/home/irvan/Desktop/UAS/BattleCars/main.cpp"
+},
+{
+  "directory": "/home/irvan/Desktop/UAS/BattleCars/build",
+  "command": "/bin/clang++-10 -g -Wno-everything -std=gnu++14 -o CMakeFiles/BattleCars.dir/loadtextbmp.cpp.o -c /home/irvan/Desktop/UAS/BattleCars/loadtextbmp.cpp",
+  "file": "/home/irvan/Desktop/UAS/BattleCars/loadtextbmp.cpp"
+},
+{
+  "directory": "/home/irvan/Desktop/UAS/BattleCars/build",
+  "command": "/bin/clang++-10 -g -Wno-everything -std=gnu++14 -o CMakeFiles/BattleCars.dir/object.cpp.o -c /home/irvan/Desktop/UAS/BattleCars/object.cpp",
+  "file": "/home/irvan/Desktop/UAS/BattleCars/object.cpp"
+},
+{
+  "directory": "/home/irvan/Desktop/UAS/BattleCars/build",
+  "command": "/bin/clang++-10 -g -Wno-everything -std=gnu++14 -o CMakeFiles/BattleCars.dir/print.cpp.o -c /home/irvan/Desktop/UAS/BattleCars/print.cpp",
+  "file": "/home/irvan/Desktop/UAS/BattleCars/print.cpp"
+},
+{
+  "directory": "/home/irvan/Desktop/UAS/BattleCars/build",
+  "command": "/bin/clang++-10 -g -Wno-everything -std=gnu++14 -o CMakeFiles/BattleCars.dir/project.cpp.o -c /home/irvan/Desktop/UAS/BattleCars/project.cpp",
+  "file": "/home/irvan/Desktop/UAS/BattleCars/project.cpp"
+},
+{
+  "directory": "/home/irvan/Desktop/UAS/BattleCars/build",
+  "command": "/bin/clang++-10 -g -Wno-everything -std=gnu++14 -o CMakeFiles/BattleCars.dir/fatal.cpp.o -c /home/irvan/Desktop/UAS/BattleCars/fatal.cpp",
+  "file": "/home/irvan/Desktop/UAS/BattleCars/fatal.cpp"
+},
+{
+  "directory": "/home/irvan/Desktop/UAS/BattleCars/build",
+  "command": "/bin/clang++-10 -g -Wno-everything -std=gnu++14 -o CMakeFiles/BattleCars.dir/errcheck.cpp.o -c /home/irvan/Desktop/UAS/BattleCars/errcheck.cpp",
+  "file": "/home/irvan/Desktop/UAS/BattleCars/errcheck.cpp"
+}
+]

@@ -1,0 +1,3 @@
+/home/irvan/Desktop/UAS/BattleCars/build/CMakeFiles/rebuild_cache.dir
+/home/irvan/Desktop/UAS/BattleCars/build/CMakeFiles/edit_cache.dir
+/home/irvan/Desktop/UAS/BattleCars/build/CMakeFiles/BattleCars.dir
