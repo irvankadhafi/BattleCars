@@ -71,7 +71,7 @@ void Timer(int val){
 		tracercounter = 0;
 	}
 	std::cout<<"Enemypos : "<<enemypos<<std::endl;
-	std::cout<<"enemyDirection : "<<enemyDirection<<std::endl;
+	// std::cout<<"enemyDirection : "<<enemyDirection<<std::endl;
 	glutPostRedisplay();
    glutTimerFunc(refreshMills, Timer, 0);
 }

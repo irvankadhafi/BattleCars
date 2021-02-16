@@ -71,7 +71,7 @@ float leftRight =0.0;
 int refreshMills = 50;
 bool bulletFired = false;
 GLfloat bulletpos = 0;
-
+bool enemyDirection = true;
 void Init(){
     textures[TEX_METAL] = LoadTexBMP("textures/basic-metal.bmp");
     textures[TEX_GLASS] = LoadTexBMP("textures/glass.bmp");
@@ -113,6 +113,18 @@ void Timer(int val){
             bulletpos = 0;
         }
 	}
+    // if(leftRight >= 1.5){ //Left
+	// 	enemyDirection = false;
+	// }
+	// if(leftRight <= -2){ //Right
+	// 	enemyDirection = true;
+	// }
+    // if(enemyDirection){
+	// 	leftRight += 0.05;
+	// }else{
+	// 	leftRight -= 0.05;
+	// }
+    // mvCar += 0.05;
 	glutPostRedisplay();
    glutTimerFunc(refreshMills, Timer, 0);
 }
@@ -1262,9 +1274,25 @@ void display()
             glBindTexture(GL_TEXTURE_2D,textures[TEX_ASPALTH]);
         }
         mvRoad >= 5 ? mvRoad = 0 : NULL;
-        cube(xPos+mvRoad,-0.1,1.75, 1,0.1,2.75, 0);
+        cube(xPos+mvRoad,-0.1,2.25, 1,0.1,3, 0);
         xPos += 2;
     }
+    //Grass Square Beside Road
+    glColor3f(0.7, 0.7, 0.7);
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_GRASS]);
+    texScale = 0.5;
+    cube(-16,-0.05,8, 14,0.15,2, 0); //Left
+    cube(-16,-0.05,-3, 14,0.15,2, 0); //Right
+    //Hedge
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_HEDGE]);
+    texScale = 0.5;
+    cube(-16,0.3,6.25, 14,0.15,0.3, 0); //Left
+    cube(-16,0.3,-1.25, 14,0.15,0.3, 0); //Right
+    //Walkway
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_WALKWAY]);
+    texScale = 0.4;
+    cube(-16,0.15,6.95, 14,0.05,0.3, 0); //Left
+    cube(-16,0.15,-1.95, 14,0.05,0.3, 0); //Right
 
     // Desert Sands
     glColor3f(0.4, 0.4, 0.4);
@@ -1284,16 +1312,8 @@ void display()
     cube(-10,-0.05,-0.5, 20,0.15,0.5, 0); // Along Street
 
     //Sidewalks (Kiri)
-    cube(-10,-0.05,5, 20,0.15,0.5, 0);
+    cube(-10,-0.05,5.5, 20,0.15,0.5, 0);
 
-    //Sidewalks (Ends)
-    //Near
-    // cube(-6.5,-0.05,5, 2,0.15,0.5, 90); // Kiri side
-    // cube(6.5,-0.05,5, 2,0.15,0.5, 90); // Kiri side
-    // cube(-6.5,-0.05,-2, 2,0.15,0.5, 90); // Kanan side
-    // cube(6.5,-0.05,-2, 2,0.15,0.5, 90); // Kanan side
-    //Far
-    // cube(10.5,-0.05,2.5, 1,0.15,0.5, 90); // Kiri side belakang
 
     cube(10.5,-0.05,2.5, 3.5,0.15,0.5, 90); // Middle
 
@@ -1303,15 +1323,21 @@ void display()
     //Rumah Belakang Sekarang
     //Grey town house - Far
     // greyHouse(10,-2.05,-90); //Left
-    // greyHouse(10,2.05,-90); //Middle
+    greyHouse(10,2.05,-90); //Middle
+    //Hedges
+    glColor3f(0, 0.3, 0.1);
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_HEDGE]);
+    texScale = 0.25;
+    cube(11.497,0.13,5.05, 1,0.3,0.5, 90);
+    cube(11.497,0.13,-0.5, 0.75,0.3,0.5, 90);
     // greyHouse(10,6.15,-90); //Right
 
-    //Fence
-    // glColor3f(0.4, 0.4, 0.4);
-    // glBindTexture(GL_TEXTURE_2D,textures[TEX_WOODFENCE]);
-    // texScale = 0.5;
-    // cube(13,0.6,0, 0.05,0.5,2, 90); //Left
-    // cube(13,0.6,4.1, 0.05,0.5,2, 90); //Left
+    // Fence
+    glColor3f(0.4, 0.4, 0.4);
+    glBindTexture(GL_TEXTURE_2D,textures[TEX_WOODFENCE]);
+    texScale = 0.5;
+    cube(8,0.6,-1.05, -0.05,0.5,3, 90); //Right
+    cube(10.49,0.6,6.05, 0.05,0.5,0.5, 90); //Left
 
     //Brown workshop - player side
     glColor3f(0.7, 0.7, 0.7);
@@ -1321,13 +1347,13 @@ void display()
     //Storage Facility
     glColor3f(0.33, 0.22, 0.11);
     glBindTexture(GL_TEXTURE_2D,textures[TEX_WHITEBRICK]);
-    workshop(8,6,180);
+    workshop(8,7,180);
     glColor3f(0.33, 0.22, 0.11);
     glBindTexture(GL_TEXTURE_2D,textures[TEX_WHITEBRICK]);
-    workshop(4,6,180);
+    workshop(4,7,180);
     glColor3f(0.33, 0.22, 0.11);
     glBindTexture(GL_TEXTURE_2D,textures[TEX_WHITEBRICK]);
-    workshop(0,6,180);
+    workshop(0,7,180);
 
     //Triagular Roof
     texRepX = 2/texScale;
@@ -1341,9 +1367,9 @@ void display()
         glBindTexture(GL_TEXTURE_2D,textures[TEX_WHITEBRICK]);
         glBegin(GL_TRIANGLES);
         glNormal3f(0,0,-1);
-        glTexCoord2f(0.0,0.0); glVertex3f(xVal,2,5);
-        glTexCoord2f(texRepX, 0.0); glVertex3f(xVal-2,2,5);
-        glTexCoord2f(texRepX, texRepY); glVertex3f(xVal-2,2.7,5);
+        glTexCoord2f(0.0,0.0); glVertex3f(xVal,2,6);
+        glTexCoord2f(texRepX, 0.0); glVertex3f(xVal-2,2,6);
+        glTexCoord2f(texRepX, texRepY); glVertex3f(xVal-2,2.7,6);
         glEnd();
 
         texRepX = 4/texScale;
@@ -1353,10 +1379,10 @@ void display()
         glBindTexture(GL_TEXTURE_2D,textures[TEX_METALROOF]);
         glBegin(GL_QUADS);
         glNormal3f(-0.33035, 0.943858, 0);
-        glTexCoord2f(0.0,0.0); glVertex3f(xVal,2,5);
-        glTexCoord2f(texRepX,0.0); glVertex3f(xVal-2,2.7,5);
-        glTexCoord2f(texRepX,texRepY); glVertex3f(xVal-2,2.7,7);
-        glTexCoord2f(0.0,texRepY); glVertex3f(xVal,2,7);
+        glTexCoord2f(0.0,0.0); glVertex3f(xVal,2,6);
+        glTexCoord2f(texRepX,0.0); glVertex3f(xVal-2,2.7,6);
+        glTexCoord2f(texRepX,texRepY); glVertex3f(xVal-2,2.7,8);
+        glTexCoord2f(0.0,texRepY); glVertex3f(xVal,2,8);
         glEnd();
 
         texRepX = 1;
@@ -1568,6 +1594,7 @@ void key(unsigned char ch,int x,int y)
         case 'a' :
         case 'A' :
             (leftRight<1.5) ? leftRight += 0.05 : leftRight += 0 ;
+            std::cout<<"left : "<<leftRight<<std::endl;
             break;
         //  Player moving right car
         case 'd' :
