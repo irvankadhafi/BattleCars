@@ -12,10 +12,11 @@
  *
  */
 #include "IRVANKDHF.h"
-
+#include <list>
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
 #endif
+#define MAX_BULLETS 1000
 int axes=0;       //  Display axes
 int mode=0;       //  Projection mode
 int move=1;       //  Move light
@@ -65,18 +66,35 @@ float Ambient[]   = {0.01*80 ,0.01*80 ,0.01*80 ,1.0};
 float Diffuse[]   = {1.0,1.0,1.0,1.0};
 float Specular[]  = {0.01*0,0.01*0,0.01*0,1.0};
 
-float mvPlayerCar = 0.0;
-float mvRoad = 0.0;
-float leftRightPlayer =0.0;
-float leftRightEnemy =0.0;
-int refreshMills = 150;
-int refreshMillsEnemy = 175;
+int refreshMills = 25;
+int refreshMillsEnemy = 75;
 bool bulletFired = false;
-GLfloat playerBulletPos = 0;
 GLfloat enemyBulletPos = 0;
 int counterFire = 0;
 bool enemyDirection = true;
+typedef struct{
+    float x, y, z;
+    bool visible;
+    bool alive;
+    bool win;
+}Car;
+Car playerCar;
+Car enemyCar;
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+} Bullet;
+Bullet playerBullet;
+std::list<Bullet> dataPlayerBullets;
+
+
 void Init(){
+    playerCar.alive = true;
+    playerCar.visible = true;
+    enemyCar.alive = true;
+    enemyCar.visible = true;
     textures[TEX_METAL] = LoadTexBMP("textures/basic-metal.bmp");
     textures[TEX_GLASS] = LoadTexBMP("textures/glass.bmp");
     textures[TEX_CARWHEEL] = LoadTexBMP("textures/car-wheel.bmp");
@@ -107,44 +125,68 @@ void Init(){
     textures[TEX_CHINDERBLOCK] = LoadTexBMP("textures/cinder-block.bmp");
     textures[TEX_DESERT] = LoadTexBMP("textures/sand.bmp");
 }
+
 void PlayerTimer(int val){
 	if(bulletFired){
-        if(playerBulletPos<=30){
-		playerBulletPos = playerBulletPos + 0.5;
+        if(dataPlayerBullets.front().x < 20){ //Batas jarak peluru
+            //Deteksi collision mobil musuh
+            if((dataPlayerBullets.front().x-playerCar.x) <= 12 && (dataPlayerBullets.front().x-playerCar.x) >= 11){
+                if(abs(enemyCar.z-dataPlayerBullets.front().z)<=0.75 && abs(enemyCar.z-dataPlayerBullets.front().z)>=0){
+                    enemyCar.alive=false;
+                    playerCar.win = true;
+                }
+            }
+            //std::cout<<"dist : "<<abs(enemyCar.z-dataPlayerBullets.front().z)<<std::endl<<std::endl;
+            dataPlayerBullets.front().x += 0.5;
         }else{
             bulletFired = false;
-            playerBulletPos = 0;
+            dataPlayerBullets.pop_front();
         }
 	}
-	glutPostRedisplay();
+	//Collision box 1
+    if(playerCar.x< -4.1 && playerCar.x> -6.7){ //2.6
+        if(playerCar.z > -2.5 && playerCar.z < -0.7){
+            playerCar.alive=false;
+            playerCar.win = false;
+        }
+    }
+	//Collision box 2
+    if(playerCar.x< -8.2 && playerCar.x> -10.8){
+        if(playerCar.z < 2.5 && playerCar.z > 0.75){
+            playerCar.alive=false;
+            playerCar.win = false;
+        }
+    }
+    if(!playerCar.alive) {exit(0);}
+    glutPostRedisplay();
    glutTimerFunc(refreshMills, PlayerTimer, 0);
 }
 void EnemyTimer(int val){
-    if(leftRightEnemy >= 1.5){ //Left
-		enemyDirection = false;
-	}
-	if(leftRightEnemy <= -2){ //Right
-		enemyDirection = true;
-	}
-    if(enemyDirection){
-		leftRightEnemy += 0.05;
-	}else{
-		leftRightEnemy -= 0.05;
-	}
-    // if(enemyBulletPos < mvPlayerCar){
-    //     counterFire++;
-    // }
-    
-    // if(enemyBulletPos > -30){
-    //     if(mvPlayerCar>= 5.5){
-    //         counterFire++;
-    //     }
-    //     enemyBulletPos -= 0.5;
-    // }else{
-    //     enemyBulletPos = 0;
-    // }
-    // std::cout<<"counter :"<<counterFire<<std::endl;
-    // mvPlayerCar += 0.05;
+    if(enemyCar.alive){
+        if(enemyCar.z >= 1.5){ //Left
+            enemyDirection = false;
+        }
+        if(enemyCar.z <= -2){ //Right
+            enemyDirection = true;
+        }
+        if(enemyDirection){
+            enemyCar.z += 0.05;
+        }else{
+            enemyCar.z -= 0.05;
+        }
+
+        if(enemyBulletPos > -15){ //Peluru enemy ujungnya tmpt player respawn
+            enemyBulletPos -= 0.5;
+            if((-enemyBulletPos-playerCar.x)<=14.5 && (-enemyBulletPos-playerCar.x) >=13){
+                if(abs(enemyCar.z-playerCar.z) < 0.5 && abs(enemyCar.z-playerCar.z) >=0 ){
+                    playerCar.alive=false;
+                    playerCar.win = false;
+                }
+            }
+        }else{
+            enemyBulletPos = 0;
+        }
+    }
 	glutPostRedisplay();
     glutTimerFunc(refreshMillsEnemy, EnemyTimer, 0);
 }
@@ -271,7 +313,6 @@ void DrawBullet(double x, double y, double z){
 	glPushMatrix();
 	glColor3f(0,0,0);
     ball(x,y,z,0.2);
-    // cube(8-playerBulletPos,0.2,2.5+leftRightPlayer, 0.2,0.2,0.2, 45);
 	glPopMatrix();
 }
 /*
@@ -1557,22 +1598,33 @@ void display()
         glDisable(GL_LIGHT6);
     }
 
-    if(mvPlayerCar >= 36) {exit(0);}
     //Enemy Car
-    car(-29,0.13,2.5+leftRightEnemy, 1,1,1, 0,0,0.8,0);
-    DrawBullet(-28.5-enemyBulletPos,0.2,2.5+leftRightEnemy);
-    // std::cout<<"en : "<<enemyBulletPos<<std::endl;
+    enemyCar.x = -7;
+    enemyCar.y = 0.13;
+    if(enemyCar.alive){
+        car(enemyCar.x,enemyCar.y,2.5+enemyCar.z, 1,1,1, 0,0,0.8,0);
+        DrawBullet(enemyCar.x-enemyBulletPos,0.2,2.5+enemyCar.z);
+    }
+    //-----------------------------------------------------------------------------------------
+
     //Police Car
-    policeCar(8.5-mvPlayerCar,0.13,2.5+leftRightPlayer, 1,1,1, 180);
-    DrawBullet(8-playerBulletPos-mvPlayerCar,0.2,2.5+leftRightPlayer);
-    // cube(7.5-playerBulletPos-mvPlayerCar,0.2,2.5+leftRightPlayer,0.05,0.5,0.4,0);
-    // std::cout<<"pl : "<<mvPlayerCar<<std::endl<<std::endl;
+    playerCar.y = 0.13;
+    if(playerCar.alive && playerCar.visible){
+        policeCar(8.5+playerCar.x, playerCar.y, 2.5+playerCar.z, 1,1,1, 180);
+    }
+    if(bulletFired){
+        DrawBullet((8+(playerCar.x*2)) - dataPlayerBullets.front().x, 0.2, 2.5 + dataPlayerBullets.front().z);
+    }
+
+
+    //-----------------------------------------------------------------------------------------
 
     // Hitbox
     glColor3f(0.4, 0.4, 0.4);
     glBindTexture(GL_TEXTURE_2D,textures[TEX_WOODFENCE]);
     texScale = 0.5;
     cube(3,0.6,1, 0.4,0.4,0.4, 90); //Right
+    // std::cout<<"boxPos (x,y,z) :"<<3<<", "<<0.6<<", "<<1<<std::endl;
     cube(-1,0.6,4, 0.4,0.4,0.4, 90); //Left
 
     //Lamp Posts
@@ -1903,30 +1955,44 @@ void key(unsigned char ch,int x,int y)
         // Player shoot with SPACEBAR
         case 32 :
             bulletFired = true;
-            playerBulletPos = 0;
+            if(!dataPlayerBullets.empty()){
+                dataPlayerBullets.pop_front();
+            }
+            playerBullet.x = playerCar.x;
+            playerBullet.z = playerCar.z;
+            dataPlayerBullets.push_back(playerBullet);
+
             break;
         //  Player moving forward car
         case 'w' :
         case 'W' :
-            mvPlayerCar += 0.05;
-            mvRoad += 0.05;
+            playerCar.x -= 0.1;
+//            std::cout<<"x : "<<playerCar.x<<std::endl;
             break;
         //  Player moving backward car
         case 's' :
         case 'S' :
-            mvPlayerCar -= 0.05;
-            mvRoad -= 0.05;
+            playerCar.x += 0.05;
             break;
         //  Player moving left car
         case 'a' :
         case 'A' :
-            (leftRightPlayer<1.5) ? leftRightPlayer += 0.05 : leftRightPlayer += 0 ;
-            // std::cout<<"left : "<<leftRightPlayer<<std::endl;
+            //deteksi kiri jalan (default)
+            if(playerCar.z <= 2){
+                playerCar.z += 0.05;
+            }else{
+                playerCar.z += 0 ;
+            }
             break;
         //  Player moving right car
         case 'd' :
         case 'D' :
-            (leftRightPlayer<-2) ? leftRightPlayer -= 0 : leftRightPlayer -= 0.05 ;
+            //deteksi kanan jalan (default)
+            if(playerCar.z < -2){
+                playerCar.z -= 0;
+            }else{
+                playerCar.z -= 0.05 ;
+            }
             break;
     }
     // std::cout<<"mvPlayerCar : "<<mvPlayerCar<<std::endl;
@@ -1966,7 +2032,7 @@ int main(int argc,char* argv[])
     //  Request double buffered, true color window with Z buffering at 600x600
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(1024,720);
-    glutCreateWindow("Battle Cars V1");
+    glutCreateWindow("Battle Cars - 181511018");
     //  Set callbacks
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);

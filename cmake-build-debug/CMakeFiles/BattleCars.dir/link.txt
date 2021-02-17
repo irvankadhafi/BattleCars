@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/BattleCars.dir/main.cpp.o CMakeFiles/BattleCars.dir/loadtextbmp.cpp.o CMakeFiles/BattleCars.dir/object.cpp.o CMakeFiles/BattleCars.dir/print.cpp.o CMakeFiles/BattleCars.dir/project.cpp.o CMakeFiles/BattleCars.dir/fatal.cpp.o CMakeFiles/BattleCars.dir/errcheck.cpp.o  -o BattleCars  -lglut -lGLU -lGL -lm 
